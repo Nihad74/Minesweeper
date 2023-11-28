@@ -1,7 +1,4 @@
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 
 public class PlayGround {
@@ -11,6 +8,7 @@ public class PlayGround {
     private char[][] grid;
     private boolean [][] visibility;
     private List<Pair<Integer>> minesPositions;
+    private List<Pair<Integer>> markedPositions;
     Random random = new Random();
     public PlayGround(int width, int height, int mines) {
         this.width = width;
@@ -19,12 +17,13 @@ public class PlayGround {
         this.grid = new char[height][width];
         this.visibility = new boolean[height][width];
         this.minesPositions = new ArrayList<>();
+        this.markedPositions = new ArrayList<>();
     }
 
     public void setPlayGround(){
        for(int i = 0; i <height; i++){
            for(int j = 0; j < width; j++){
-               grid[i][j] = '.';
+               grid[i][j] = '/';
            }
        }
        List<Integer> positions = new ArrayList<>();
@@ -42,7 +41,6 @@ public class PlayGround {
             minesPositions.add(new Pair<>(row, col));
         }
         setNumbers();
-        setVisibility();
     }
 
     public void printPlayGround() {
@@ -53,7 +51,10 @@ public class PlayGround {
             for (int j = 0; j < width; j++) {
                 if (visibility[i][j]) {
                     System.out.print(grid[i][j]);
-                } else {
+                }else if(markedPositions.contains(new Pair<>(i,j))){
+                    System.out.print("*");
+                }
+                else {
                     System.out.print('.');
                 }
             }
@@ -63,29 +64,18 @@ public class PlayGround {
         System.out.println("—│—————————│");
     }
 
-    public void setVisibility(){
-        for(int i = 0; i < height; i++){
-            for(int j = 0; j < width; j++){
-                if(grid[i][j] != 'X'){
-                    visibility[i][j] = true;
-                }else{
-                    visibility[i][j] = false;
-                }
-            }
-        }
-    }
 
     public void setNumbers(){
         for(int i = 0; i < height; i ++){
             for(int j = 0; j < width; j++){
-                if(grid[i][j] == '.'){
+                if(grid[i][j] == '/'){
                     checkCorners(i, j);
                     if((i != 0 || j != 0) && (i != 0 || j != width-1) && (i != height-1 || j != 0) && (i != height-1 || j != width-1)){
                         for(int k = i-1; k <= i+1; k++){
                             for(int l = j-1; l <= j+1; l++){
                                 try {
                                     if (grid[k][l] == 'X') {
-                                            if (grid[i][j] == '.') {
+                                            if (grid[i][j] == '/') {
                                                 grid[i][j] = '1';
                                             } else {
                                                 grid[i][j]++;
@@ -95,6 +85,36 @@ public class PlayGround {
                                     continue;
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void adjustVisibility(int x, int y){
+        Queue<Pair<Integer>> queue = new LinkedList<>();
+        queue.add(new Pair<>(y, x));
+
+        while (!queue.isEmpty()) {
+            Pair<Integer> cell = queue.poll();
+            int i = cell.getFirst();
+            int j = cell.getSecond();
+
+
+            if (grid[i][j] == '/') {
+                for (int di = -1; di <= 1; di++) {
+                    for (int dj = -1; dj <= 1; dj++) {
+                        try {
+                            if((di== 0 && dj == 0) || visibility[i + di][j + dj]){
+                                continue;
+                            }
+                            if (grid[i + di][j + dj] == '/') {
+                                queue.add(new Pair<>(i + di, j + dj));
+                            }
+                            visibility[i + di][j + dj] = true;
+                        }catch (ArrayIndexOutOfBoundsException e){
+                            continue;
                         }
                     }
                 }
@@ -117,7 +137,7 @@ public class PlayGround {
                 }
             }
             if(grid[i +1][j +1] == 'X'){
-                if(grid[i][j] == '.'){
+                if(grid[i][j] == '/'){
                     grid[i][j] = '1';
                 }else{
                     grid[i][j]++;
@@ -137,7 +157,7 @@ public class PlayGround {
                 }
             }
             if(grid[i +1][j-1] == 'X'){
-                if(grid[i][j] == '.'){
+                if(grid[i][j] == '/'){
                     grid[i][j] = '1';
                 }else{
                     grid[i][j]++;
@@ -157,7 +177,7 @@ public class PlayGround {
                 }
             }
             if(grid[i-1][j+1] == 'X'){
-                if(grid[i][j] == '.'){
+                if(grid[i][j] == '/'){
                     grid[i][j] = '1';
                 }else{
                     grid[i][j]++;
@@ -177,7 +197,7 @@ public class PlayGround {
                 }
             }
             if(grid[i-1][j-1] == 'X'){
-                if(grid[i][j] == '.'){
+                if(grid[i][j] == '/'){
                     grid[i][j] = '1';
                 }else {
                     grid[i][j]++;
@@ -204,5 +224,9 @@ public class PlayGround {
 
     public List<Pair<Integer>> getMinesPositions() {
         return minesPositions;
+    }
+
+    public List<Pair<Integer>> getMarkedPositions() {
+        return markedPositions;
     }
 }
